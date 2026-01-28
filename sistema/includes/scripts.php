@@ -4,6 +4,7 @@
 
 <!-- Carga la hoja de estilos principal del sitio -->
 <!-- El ?1.0 ayuda a evitar problemas de caché del navegador -->
+ <link rel="stylesheet" type="text/css" href="cses/modventas.css?1.0" media="all">
 <link rel="stylesheet" type="text/css" href="css/style.css?1.0" media="all">
 
 <!-- Carga los estilos para diseño adaptable a móviles y tablets -->
@@ -47,7 +48,7 @@
 <!-- Incluye el archivo PHP functions.php en el servidor -->
 <!-- Permite reutilizar funciones y lógica del backend -->
 
-<link rel="stylesheet" type="text/css" href="css/dashboard.css" media="all">
+
 
 
 <?php include "functions.php"; ?>

@@ -1,2 +1,2 @@
 # SistemaVenta
-Sistema de ventas completo en PHP....
+Sistema de ventas completo en PHP.

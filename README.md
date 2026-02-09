@@ -12,7 +12,7 @@ app/core/          → Archivos que hace FUNCIONAR el sistema
 app/helpers/       → Funciones UTILES que usamos en muchos lugares
                      Ej: formatear fecha, validar email
 
-                     
+                     kk
 
                      views/layouts/     → Diseños BASE (header, footer, menú)
 views/auth/        → Páginas de Login/Registro

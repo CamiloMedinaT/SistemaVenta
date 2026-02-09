@@ -93,12 +93,12 @@ session_start();
 				$emailEmpresa = $arrInfoEmpresa['email'];
 				$dirEmpresa = $arrInfoEmpresa['direccion'];
 				$iva = $arrInfoEmpresa['iva'];
-				$foto1 = $arrInfoEmpresa['foto'];
+			//	$foto1 = $arrInfoEmpresa['foto'];
 				$moned = $arrInfoEmpresa['moneda'];
 			}
 
 			/**
-			 * Validación y carga de la imagen de la empresa
+			 *Validación y carga de la imagen de la empresa
 			 */
 			$foto = '';
 			$classRemove = 'notBlock';

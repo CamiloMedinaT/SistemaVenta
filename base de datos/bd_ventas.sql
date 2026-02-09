@@ -1,31 +1,53 @@
 -- phpMyAdmin SQL Dump
+-- Declaración de encabezado que indica que este archivo fue generado por phpMyAdmin
+
 -- version 5.1.1
+-- Versión de phpMyAdmin utilizada para generar el dump
+
 -- https://www.phpmyadmin.net/
+-- URL oficial de phpMyAdmin
+
 --
 -- Servidor: 127.0.0.1
+-- Dirección IP del servidor de base de datos (localhost)
+
 -- Tiempo de generación: 24-09-2022 a las 00:53:59
+-- Fecha y hora en que se generó el archivo de volcado
+
 -- Versión del servidor: 10.4.22-MariaDB
+-- Versión del servidor de base de datos MariaDB
+
 -- Versión de PHP: 7.4.27
+-- Versión de PHP utilizada
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+-- Configura el modo SQL para evitar la asignación automática de valores en columnas AUTO_INCREMENT al insertar 0
 
+START TRANSACTION;
+-- Inicia una transacción para garantizar la integridad de las operaciones
+
+SET time_zone = "+00:00";
+-- Establece la zona horaria del servidor a UTC
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
+-- Comentarios condicionales para MySQL que guardan configuraciones actuales y establecen UTF8 como conjunto de caracteres
 
 --
 -- Base de datos: `bd_ventas`
---
+-- Nombre de la base de datos que se está volcando
 
 DELIMITER $$
+-- Cambia el delimitador de comandos de ; a $$ para permitir la creación de procedimientos almacenados
+
 --
 -- Procedimientos
---
+-- Sección para crear procedimientos almacenados
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `actualizar_precio_producto` (IN `n_cantidad` INT, IN `n_precio` DECIMAL(10,2), IN `codigo` INT)  BEGIN
+-- Crea el procedimiento actualizar_precio_producto con 3 parámetros de entrada
     	DECLARE nueva_existencia int;
         DECLARE nuevo_total decimal(10,2);
         DECLARE nuevo_precio decimal(10,2);
@@ -35,52 +57,72 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `actualizar_precio_producto` (IN `n_
         
         DECLARE actual_existencia int;
         DECLARE actual_precio decimal(10,2);
+        -- Declara variables locales para los cálculos
         
         SELECT precio,existencia INTO actual_precio,actual_existencia FROM producto WHERE codproducto = codigo;
+        -- Obtiene el precio y existencia actual del producto
+        
         SET nueva_existencia = actual_existencia + n_cantidad;
+        -- Calcula la nueva existencia sumando la cantidad recibida
         
         UPDATE producto SET existencia = nueva_existencia, precio = n_precio WHERE codproducto = codigo;
+        -- Actualiza la existencia y precio del producto en la base de datos
         
         SELECT nueva_existencia,nuevo_precio;
+        -- Devuelve los nuevos valores calculados
         
      END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_detalle_temp` (IN `codigo` INT, IN `cantidad` INT, IN `token_user` VARCHAR(50))  BEGIN
+-- Crea el procedimiento add_detalle_temp para agregar productos al carrito temporal de ventas
     
     	DECLARE precio_actual decimal(10,2);
         DECLARE costo_actual decimal(10,2);
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para precio, costo y existencia
         
-SELECT costo,precio INTO costo_actual,precio_actual FROM producto WHERE codproducto = codigo;
+        SELECT costo,precio INTO costo_actual,precio_actual FROM producto WHERE codproducto = codigo;
+        -- Obtiene el costo y precio del producto
         
         INSERT INTO detalle_temp(token_user,codproducto,cantidad,costo,precio_venta) VALUES(token_user,codigo,cantidad,costo_actual,precio_actual);
+        -- Inserta el producto en la tabla temporal de detalles de venta
         
         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = codigo;
+        -- Obtiene la existencia actual del producto
 
                 SET nueva_existencia = existencia_actual - cantidad;
+                -- Calcula la nueva existencia restando la cantidad vendida
+                
                 UPDATE producto SET existencia = nueva_existencia WHERE codproducto = codigo;
+                -- Actualiza la existencia del producto en inventario
         
         SELECT tmp.correlativo, tmp.codproducto,p.descripcion,tmp.cantidad,tmp.precio_venta FROM detalle_temp tmp
         INNER JOIN producto p 
         ON tmp.codproducto = p.codproducto
         WHERE tmp.token_user = token_user;
+        -- Devuelve los detalles del carrito temporal
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `add_detalle_temp_compra` (IN `codigo` INT, IN `cantidad` INT, IN `token_user` VARCHAR(50), IN `costo` DECIMAL(10,2))  BEGIN 
+-- Crea el procedimiento add_detalle_temp_compra para agregar productos al carrito temporal de compras
 	    DECLARE precio_actual decimal(10,2);
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para precio y existencia
         
         INSERT INTO detalle_temp_compra(token_user,codproducto,cantidad,precio_venta) VALUES(token_user,codigo,cantidad,costo);
+        -- Inserta el producto en la tabla temporal de detalles de compra
         
         SELECT tmp.correlativo, tmp.codproducto,p.descripcion,tmp.cantidad,tmp.precio_venta FROM detalle_temp_compra tmp
         INNER JOIN producto p 
         ON tmp.codproducto = p.codproducto
         WHERE tmp.token_user = token_user;
+        -- Devuelve los detalles del carrito temporal de compras
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `anular_compra` (IN `no_venta` INT)  BEGIN
+-- Crea el procedimiento anular_compra para revertir una compra registrada
 	DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -89,44 +131,73 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `anular_compra` (IN `no_venta` INT) 
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para controlar el proceso de anulación
         
         SET existe_venta = (SELECT COUNT(*) FROM compras WHERE nocompra = no_venta and status != 2);
+        -- Verifica si existe la compra y no está ya anulada
         
         IF existe_venta > 0 THEN
+        -- Si la compra existe y no está anulada
         	CREATE TEMPORARY TABLE tbl_tmp (
                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar los productos de la compra
                 
                 SET a = 1;
+                -- Inicializa contador
                 
                 SET registros = (SELECT COUNT(*)FROM entradas WHERE nocompra = no_venta);
+                -- Cuenta cuántos productos hay en la compra
                 
                 IF registros > 0 THEN
+                -- Si hay productos en la compra
                 	INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM entradas WHERE nocompra = no_venta;
+                    -- Copia los productos a la tabla temporal
                     
                     WHILE a <= registros DO
+                    -- Itera por cada producto
                     	SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                        -- Obtiene el código y cantidad del producto actual
+                        
                         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = cod_producto;
+                        -- Obtiene la existencia actual del producto
+                        
                         SET nueva_existencia = existencia_actual - cant_producto;
+                        -- Calcula la nueva existencia restando lo comprado
+                        
                         UPDATE producto SET existencia = nueva_existencia WHERE codproducto = cod_producto;
+                        -- Actualiza el inventario del producto
                         
                         SET a=a+1;
+                        -- Incrementa el contador
                     
                     END WHILE;
+                    -- Fin del bucle
+                    
                     UPDATE compras SET status = 2 WHERE nocompra = no_venta;
+                    -- Marca la compra como anulada (status = 2)
+                    
                     DROP TABLE tbl_tmp;
+                    -- Elimina la tabla temporal
+                    
                     SELECT * FROM compras WHERE nocompra = no_venta;
+                    -- Devuelve la información de la compra anulada
                 
                 END IF;
+                -- Fin del condicional de registros
         
         ELSE
+        -- Si la compra no existe o ya está anulada
         	SELECT 0 compras;
+            -- Devuelve 0 indicando que no se pudo anular
         END IF;
+        -- Fin del condicional principal
     
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `anular_venta` (IN `no_venta` INT)  BEGIN
+-- Crea el procedimiento anular_venta para revertir una venta registrada
     	DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -135,45 +206,76 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `anular_venta` (IN `no_venta` INT)  
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para controlar el proceso de anulación
         
         SET existe_venta = (SELECT COUNT(*) FROM venta WHERE noventa = no_venta and status != 2);
+        -- Verifica si existe la venta y no está ya anulada
         
         IF existe_venta > 0 THEN
+        -- Si la venta existe y no está anulada
         	CREATE TEMPORARY TABLE tbl_tmp (
                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar los productos de la venta
                 
                 SET a = 1;
+                -- Inicializa contador
                 
                 SET registros = (SELECT COUNT(*)FROM detalleventa WHERE noventa = no_venta);
+                -- Cuenta cuántos productos hay en la venta
                 
                 IF registros > 0 THEN
+                -- Si hay productos en la venta
                 	INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalleventa WHERE noventa = no_venta;
+                    -- Copia los productos a la tabla temporal
                     
                     WHILE a <= registros DO
+                    -- Itera por cada producto
                     	SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                        -- Obtiene el código y cantidad del producto actual
+                        
                         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = cod_producto;
+                        -- Obtiene la existencia actual del producto
+                        
                         SET nueva_existencia = existencia_actual + cant_producto;
+                        -- Calcula la nueva existencia sumando lo vendido (devolviendo al inventario)
+                        
                         UPDATE producto SET existencia = nueva_existencia WHERE codproducto = cod_producto;
-           UPDATE detalleventa SET status = 2 WHERE noventa = no_venta;
+                        -- Actualiza el inventario del producto
+                        
+                        UPDATE detalleventa SET status = 2 WHERE noventa = no_venta;
+                        -- Marca el detalle de venta como anulado
                         
                         SET a=a+1;
+                        -- Incrementa el contador
                     
                     END WHILE;
+                    -- Fin del bucle
+                    
                     UPDATE venta SET status = 2 WHERE noventa = no_venta;
+                    -- Marca la venta como anulada (status = 2)
+                    
                     DROP TABLE tbl_tmp;
+                    -- Elimina la tabla temporal
+                    
                     SELECT * FROM venta WHERE noventa = no_venta;
+                    -- Devuelve la información de la venta anulada
                 
                 END IF;
+                -- Fin del condicional de registros
         
         ELSE
+        -- Si la venta no existe o ya está anulada
         	SELECT 0 venta;
+            -- Devuelve 0 indicando que no se pudo anular
         END IF;
+        -- Fin del condicional principal
     
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cancelar_compra` (IN `token` INT)  BEGIN
+-- Crea el procedimiento cancelar_compra para cancelar una compra en proceso
     	DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -182,44 +284,73 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `cancelar_compra` (IN `token` INT)  
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para controlar el proceso de cancelación
         
         SET existe_venta = (SELECT COUNT(*) FROM detalle_temp_compra WHERE token_user = token);
+        -- Verifica si hay productos en el carrito temporal de compras
         
         IF existe_venta > 0 THEN
+        -- Si hay productos en el carrito
         	CREATE TEMPORARY TABLE tbl_tmp (
                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar los productos del carrito
                 
                 SET a = 1;
+                -- Inicializa contador
                 
                 SET registros = (SELECT COUNT(*)FROM detalle_temp_compra WHERE token_user = token);
+                -- Cuenta cuántos productos hay en el carrito
                 
                 IF registros > 0 THEN
+                -- Si hay productos en el carrito
                 	INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalle_temp_compra WHERE token_user = token;
+                    -- Copia los productos a la tabla temporal
                     
                     WHILE a <= registros DO
+                    -- Itera por cada producto
                     	SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                        -- Obtiene el código y cantidad del producto actual
+                        
                         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = cod_producto;
+                        -- Obtiene la existencia actual del producto
+                        
                         SET nueva_existencia = existencia_actual + cant_producto;
+                        -- Calcula la nueva existencia sumando lo que estaba en el carrito
+                        
                         UPDATE producto SET existencia = nueva_existencia WHERE codproducto = cod_producto;
+                        -- Actualiza el inventario del producto (restaura las cantidades)
                         
                         SET a=a+1;
+                        -- Incrementa el contador
                     
                     END WHILE;
+                    -- Fin del bucle
+                    
        DELETE FROM detalle_temp_compra WHERE token_user = token;
+       -- Elimina todos los registros del carrito temporal de compras
+       
               DROP TABLE tbl_tmp;
+              -- Elimina la tabla temporal
+       
        SELECT * FROM detalle_temp_compra WHERE token_user = token;
+       -- Devuelve los registros (debería estar vacío)
                 
                 END IF;
+                -- Fin del condicional de registros
         
         ELSE
+        -- Si no hay productos en el carrito
         	SELECT 0 detalle_temp_compra;
+            -- Devuelve 0 indicando que no había nada que cancelar
         END IF;
+        -- Fin del condicional principal
     
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cancelar_venta` (IN `token` INT)  BEGIN
+-- Crea el procedimiento cancelar_venta para cancelar una venta en proceso
     	DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -228,44 +359,73 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `cancelar_venta` (IN `token` INT)  B
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
+        -- Declara variables para controlar el proceso de cancelación
         
         SET existe_venta = (SELECT COUNT(*) FROM detalle_temp WHERE token_user = token);
+        -- Verifica si hay productos en el carrito temporal de ventas
         
         IF existe_venta > 0 THEN
+        -- Si hay productos en el carrito
         	CREATE TEMPORARY TABLE tbl_tmp (
                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar los productos del carrito
                 
                 SET a = 1;
+                -- Inicializa contador
                 
                 SET registros = (SELECT COUNT(*)FROM detalle_temp WHERE token_user = token);
+                -- Cuenta cuántos productos hay en el carrito
                 
                 IF registros > 0 THEN
+                -- Si hay productos en el carrito
                 	INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalle_temp WHERE token_user = token;
+                    -- Copia los productos a la tabla temporal
                     
                     WHILE a <= registros DO
+                    -- Itera por cada producto
                     	SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                        -- Obtiene el código y cantidad del producto actual
+                        
                         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = cod_producto;
+                        -- Obtiene la existencia actual del producto
+                        
                         SET nueva_existencia = existencia_actual + cant_producto;
+                        -- Calcula la nueva existencia sumando lo que estaba en el carrito
+                        
                         UPDATE producto SET existencia = nueva_existencia WHERE codproducto = cod_producto;
+                        -- Actualiza el inventario del producto (restaura las cantidades)
                         
                         SET a=a+1;
+                        -- Incrementa el contador
                     
                     END WHILE;
+                    -- Fin del bucle
+                    
        DELETE FROM detalle_temp WHERE token_user = token;
+       -- Elimina todos los registros del carrito temporal de ventas
+       
               DROP TABLE tbl_tmp;
+              -- Elimina la tabla temporal
+       
        SELECT * FROM detalle_temp WHERE token_user = token;
+       -- Devuelve los registros (debería estar vacío)
                 
                 END IF;
+                -- Fin del condicional de registros
         
         ELSE
+        -- Si no hay productos en el carrito
         	SELECT 0 detalle_temp;
+            -- Devuelve 0 indicando que no había nada que cancelar
         END IF;
+        -- Fin del condicional principal
     
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `dataDashboard` (IN `caja_id` INT)  BEGIN
+-- Crea el procedimiento dataDashboard para obtener estadísticas del sistema para el dashboard
     	
         DECLARE usuarios int;
         DECLARE clientes int;
@@ -280,25 +440,53 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `dataDashboard` (IN `caja_id` INT)  
         DECLARE egreso decimal(10,2);
         DECLARE credito decimal(10,2);
         DECLARE inicios decimal(10,2);
+        -- Declara variables para cada métrica del dashboard
         
         SELECT COUNT(*) INTO usuarios FROM usuario WHERE status !=10;
+        -- Cuenta usuarios activos (status diferente de 10)
+        
         SELECT COUNT(*) INTO clientes FROM cliente WHERE status !=10;
+        -- Cuenta clientes activos
+        
         SELECT COUNT(*) INTO proveedores FROM proveedor WHERE status !=10;
+        -- Cuenta proveedores activos
+        
         SELECT COUNT(*) INTO productos FROM producto WHERE status !=10;
+        -- Cuenta productos activos
+        
         SELECT SUM(totalventa) INTO ventas FROM venta WHERE caja = caja_id AND status =1;
+        -- Suma total de ventas completadas en la caja específica
+        
         SELECT SUM(totalventa) INTO credito FROM venta WHERE caja = caja_id AND status =3;
+        -- Suma total de ventas a crédito en la caja específica
+        
         SELECT SUM(cantidad) INTO abonos FROM detalle_recibo WHERE caja = caja_id;
+        -- Suma total de abonos recibidos en la caja específica
+        
         SELECT SUM(cantidad) INTO pagos FROM detalle_recibo_compra WHERE caja = caja_id;
+        -- Suma total de pagos realizados en la caja específica
+        
         SELECT SUM(totalcompra) INTO compra FROM compras WHERE caja = caja_id AND status =1;
+        -- Suma total de compras completadas en la caja específica
+        
         SELECT SUM(cantidad) INTO egreso FROM egresos WHERE caja = caja_id;
+        -- Suma total de egresos en la caja específica
+        
         SELECT SUM(totalventa-abono) INTO cobrar FROM venta WHERE status =3;
+        -- Calcula el total por cobrar (ventas a crédito menos abonos)
+        
         SELECT SUM(totalcompra-abono) INTO pagar FROM compras WHERE status =3;
+        -- Calcula el total por pagar (compras a crédito menos abonos)
+        
         SELECT inicio INTO inicios FROM caja WHERE status =1;
+        -- Obtiene el monto inicial de la caja abierta
         
         SELECT usuarios,clientes,proveedores,productos,ventas,abonos,pagos,compra,cobrar,pagar,egreso,credito,inicios;
+        -- Devuelve todas las métricas calculadas
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `del_detalle_temp` (IN `id_detalle` INT, IN `token` VARCHAR(50))  BEGIN    
+-- Crea el procedimiento del_detalle_temp para eliminar un producto del carrito temporal de ventas
 		DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -307,33 +495,46 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `del_detalle_temp` (IN `id_detalle` 
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
-        
+        -- Declara variables para controlar la eliminación
 
         	CREATE TEMPORARY TABLE tbl_tmp (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar el producto a eliminar
                 
                 SET a = 1;
+                -- Inicializa contador
                 
                 SET registros = (SELECT COUNT(*)FROM detalle_temp WHERE correlativo = id_detalle);
-                
+                -- Verifica si existe el detalle específico
 
                 	INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalle_temp WHERE correlativo = id_detalle;
+                    -- Copia el producto a eliminar a la tabla temporal
                     
                     	SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                        -- Obtiene el código y cantidad del producto
+                        
                         SELECT existencia INTO existencia_actual FROM producto WHERE codproducto = cod_producto;
+                        -- Obtiene la existencia actual del producto
+                        
                         SET nueva_existencia = existencia_actual + cant_producto;
+                        -- Calcula la nueva existencia sumando la cantidad eliminada del carrito
+                        
                         UPDATE producto SET existencia = nueva_existencia WHERE codproducto = cod_producto;
+                        -- Actualiza el inventario del producto
 
             DELETE FROM detalle_temp WHERE correlativo = id_detalle;
+            -- Elimina el producto del carrito temporal
   
             SELECT tmp.correlativo, tmp.codproducto,p.descripcion,tmp.cantidad,tmp.precio_venta FROM detalle_temp tmp
             INNER JOIN producto p 
             ON tmp.codproducto = p.codproducto
             WHERE tmp.token_user = token;
+            -- Devuelve los productos restantes en el carrito
         END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `del_detalle_temp_compra` (IN `id_detalle` INT, IN `token` VARCHAR(50))  BEGIN  	
+-- Crea el procedimiento del_detalle_temp_compra para eliminar un producto del carrito temporal de compras
   		DECLARE existe_venta int;
         DECLARE registros int;
         DECLARE a int;
@@ -342,30 +543,37 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `del_detalle_temp_compra` (IN `id_de
         DECLARE cant_producto int;
         DECLARE existencia_actual int;
         DECLARE nueva_existencia int;
-        
+        -- Declara variables para controlar la eliminación
 
         CREATE TEMPORARY TABLE tbl_tmp (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int);
+                -- Crea una tabla temporal para almacenar el producto a eliminar
                 
                 SET a = 1;
+                -- Inicializa contador
                 
          SET registros = (SELECT COUNT(*)FROM detalle_temp_compra WHERE correlativo = id_detalle);
-                
+                -- Verifica si existe el detalle específico
 
          INSERT INTO tbl_tmp(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalle_temp_compra WHERE correlativo = id_detalle;
+                    -- Copia el producto a eliminar a la tabla temporal
                     
          SELECT cod_prod,cant_prod INTO cod_producto,cant_producto FROM tbl_tmp WHERE id = a;
+                    -- Obtiene el código y cantidad del producto
 
             DELETE FROM detalle_temp_compra WHERE correlativo = id_detalle;
+            -- Elimina el producto del carrito temporal de compras
   
             SELECT tmp.correlativo, tmp.codproducto,p.descripcion,tmp.cantidad,tmp.precio_venta FROM detalle_temp_compra tmp
             INNER JOIN producto p 
             ON tmp.codproducto = p.codproducto
             WHERE tmp.token_user = token;
+            -- Devuelve los productos restantes en el carrito de compras
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `procesar_compra` (IN `cod_usuario` INT, IN `cod_cliente` INT, IN `token` VARCHAR(50), IN `tipo_pago` INT, IN `id_caja` INT)  BEGIN
+-- Crea el procedimiento procesar_compra para finalizar una compra
         DECLARE venta INT;
         
         DECLARE registros INT;        
@@ -383,50 +591,76 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `procesar_compra` (IN `cod_usuario` 
         DECLARE tmp_cost_prod DECIMAL(10,2);
         DECLARE a INT;
         SET a = 1;
+        -- Declara variables para procesar la compra
         
         CREATE TEMPORARY TABLE tbl_tmp_tokenuser(
                 id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 cod_prod BIGINT,
                 cant_prod int,
                 cost_prod DECIMAL(10,2));
+                -- Crea tabla temporal para almacenar productos del carrito
                 
 SET registros = (SELECT COUNT(*) FROM detalle_temp_compra WHERE token_user = token);
+        -- Cuenta los productos en el carrito de compras
         
         IF registros > 0 THEN
+        -- Si hay productos en el carrito
   INSERT INTO tbl_tmp_tokenuser(cod_prod,cant_prod,cost_prod) SELECT codproducto,cantidad,precio_venta FROM detalle_temp_compra WHERE token_user = token;
+            -- Copia productos a tabla temporal
             
 INSERT INTO compras(usuario,caja,codproveedor,status) VALUES(cod_usuario,id_caja,cod_cliente,tipo_pago);
+            -- Crea registro de compra
             SET venta = LAST_INSERT_ID();
+            -- Obtiene el ID de la compra creada
             
 INSERT INTO entradas(nocompra,codproducto,cantidad,precio) SELECT(venta) as nocompra, codproducto,cantidad,precio_venta FROM detalle_temp_compra WHERE token_user = token;
+            -- Registra los detalles de la compra en la tabla de entradas
             
             WHILE a <= registros DO
+            -- Itera por cada producto
  SELECT cod_prod,cant_prod,cost_prod INTO tmp_cod_prod,tmp_cant_prod,tmp_cost_prod FROM tbl_tmp_tokenuser WHERE id = a;
+       -- Obtiene datos del producto actual
        
  SELECT costo,existencia INTO costo_actual,existencia_actual FROM producto WHERE codproducto = tmp_cod_prod;
+                -- Obtiene costo y existencia actual del producto
                 
 SET nueva_existencia = existencia_actual + tmp_cant_prod;
+-- Calcula nueva existencia
 SET nuevo_total = (existencia_actual * costo_actual) + (tmp_cant_prod * tmp_cost_prod);
+-- Calcula nuevo valor total del inventario
 SET nuevo_costo = nuevo_total / nueva_existencia;
+-- Calcula nuevo costo promedio ponderado
 
 UPDATE producto SET existencia = nueva_existencia,costo = nuevo_costo WHERE codproducto = tmp_cod_prod;
+                -- Actualiza existencia y costo del producto
                 
                 SET a=a+1;
+                -- Incrementa contador
            
             END WHILE;
+            -- Fin del bucle
             
  SET total = (SELECT SUM(cantidad * precio_venta) FROM detalle_temp_compra WHERE token_user = token);
+-- Calcula total de la compra
 UPDATE compras SET totalcompra = total WHERE nocompra = venta;
+-- Actualiza total en registro de compra
 DELETE FROM detalle_temp_compra WHERE token_user = token;
+-- Limpia carrito temporal
             TRUNCATE TABLE tbl_tmp_tokenuser;
+            -- Limpia tabla temporal
             SELECT * FROM compras WHERE nocompra = venta;
+            -- Devuelve información de la compra procesada
             
         ELSE
+        -- Si no hay productos en el carrito
             SELECT 0;
+            -- Devuelve 0 indicando error
         END IF;
+        -- Fin del condicional
     END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `procesar_venta` (IN `cod_usuario` INT, IN `cod_cliente` INT, IN `token` VARCHAR(50), IN `tipo_pago` INT, IN `id_caja` INT, IN `descuento` INT)  BEGIN
+-- Crea el procedimiento procesar_venta para finalizar una venta
     	DECLARE venta INT;
         
         DECLARE registros INT;
@@ -440,42 +674,64 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `procesar_venta` (IN `cod_usuario` I
         DECLARE tmp_cant_producto int;
         DECLARE a INT;
         SET a = 1;
+        -- Declara variables para procesar la venta
         
         CREATE TEMPORARY TABLE tbl_tmp_tokenuser(
         		id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         		cod_prod BIGINT,
         		cant_prod int);
+                -- Crea tabla temporal para almacenar productos del carrito
                 
         SET registros = (SELECT COUNT(*) FROM detalle_temp WHERE token_user = token);
+        -- Cuenta los productos en el carrito de ventas
         
         IF registros > 0 THEN
+        -- Si hay productos en el carrito
         	INSERT INTO tbl_tmp_tokenuser(cod_prod,cant_prod) SELECT codproducto,cantidad FROM detalle_temp WHERE token_user = token;
+            -- Copia productos a tabla temporal
             
             INSERT INTO venta(usuario,caja,codcliente,status,descuento) VALUES(cod_usuario,id_caja,cod_cliente,tipo_pago,descuento);
+            -- Crea registro de venta
             SET venta = LAST_INSERT_ID();
+            -- Obtiene el ID de la venta creada
             
             INSERT INTO detalleventa(noventa,codproducto,cantidad,costo,precio_venta) SELECT(venta) as noventa, codproducto,cantidad,costo,precio_venta FROM detalle_temp WHERE token_user = token;
+            -- Registra los detalles de la venta
             
             WHILE a <= registros DO
+            -- Itera por cada producto
             	SELECT cod_prod,cant_prod INTO tmp_cod_producto,tmp_cant_producto FROM tbl_tmp_tokenuser WHERE id = a;
+                -- Obtiene datos del producto actual
                 
                 SET a=a+1;
+                -- Incrementa contador
            
             END WHILE;
+            -- Fin del bucle
             
             SET subtotal = (SELECT SUM(cantidad * precio_venta) FROM detalle_temp WHERE token_user = token);
+            -- Calcula subtotal de la venta
             SET total = subtotal - descuento;
+            -- Calcula total con descuento
             UPDATE venta SET totalventa = total WHERE noventa = venta;
+            -- Actualiza total en registro de venta
             DELETE FROM detalle_temp WHERE token_user = token;
+            -- Limpia carrito temporal
             TRUNCATE TABLE tbl_tmp_tokenuser;
+            -- Limpia tabla temporal
             SELECT * FROM venta WHERE noventa = venta;
+            -- Devuelve información de la venta procesada
             
         ELSE
+        -- Si no hay productos en el carrito
         	SELECT 0;
+            -- Devuelve 0 indicando error
         END IF;
+        -- Fin del condicional
     END$$
 
 DELIMITER ;
+-- Restablece el delimitador a su valor por defecto (;)
 
 -- --------------------------------------------------------
 

@@ -1,0 +1,324 @@
+/* Aplica a todos los elementos del documento, eliminando margenes y rellenos predeterminados, y ajustando el modelo de caja para incluir bordes y padding en el ancho y alto total */
+* {
+	margin: 0; /* Elimina margen externo predeterminado */
+	padding: 0; /* Elimina relleno interno predeterminado */
+	box-sizing: border-box; /* El ancho y alto incluye borde y relleno */
+}
+
+/* Aplica al elemento body, el contenedor principal de la página */
+body {
+	background-image: url(../img/fondoLogin1.jpg); /* Establece imagen de fondo desde carpeta img */
+	background-size: cover; /* MODIFICADO: Cubre toda el área manteniendo proporciones */
+	background-repeat: no-repeat; /* Evita que la imagen de fondo se repita */
+	background-position: center center; /* Centra la imagen en ambos ejes */
+	background-attachment: fixed; /* Fija la imagen al hacer scroll */
+	min-height: 100vh; /* Altura mínima de toda la ventana */
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fuente profesional */
+	display: flex; /* AÑADIDO: Flexbox para el body */
+	justify-content: flex-start; /* AÑADIDO: Alinear contenido a la izquierda */
+	align-items: center; /* AÑADIDO: Centrar verticalmente */
+	padding-left: 6%; /* AÑADIDO: Espacio desde la izquierda */
+	position: relative; /* AÑADIDO: Para contexto de posicionamiento */
+}
+
+/* Overlay sutil para mejorar contraste */
+body::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0%, transparent 30%); /* Gradiente sutil */
+	z-index: 0; /* Detrás del contenido */
+	pointer-events: none; /* No interferir con clics */
+}
+
+/* Contenedor principal con id #container que envuelve el formulario */
+#container {
+	width: auto; /* Cambiado: Ancho automático */
+	height: auto; /* Cambiado: Altura automática */
+	display: flex; /* Activa flexbox para centrar contenido */
+	justify-content: flex-start; /* Alinea a la izquierda */
+	align-items: flex-start; /* MODIFICADO: Alinear arriba */
+	margin-top: 8vh; /* AÑADIDO: Bajar el formulario desde arriba */
+	padding-left: 0; /* Eliminado padding-left del body */
+	position: relative; /* AÑADIDO: Para z-index */
+	z-index: 1; /* Asegurar que esté sobre el overlay */
+}
+
+/* Estilos para el formulario dentro del contenedor #container */
+#container form {
+	background: rgba(255, 255, 255, 0.96); /* Fondo blanco casi sólido */
+	width: 360px; /* Ancho compacto */
+	height: auto; /* Altura automática */
+	padding: 30px 25px; /* Padding compacto */
+	border-radius: 16px; /* Bordes redondeados moderados */
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); /* Sombra mejorada */
+	backdrop-filter: blur(8px); /* Efecto de desenfoque mejorado */
+	border: 1px solid rgba(255, 255, 255, 0.3); /* Borde sutil mejorado */
+	position: relative; /* Para elementos posicionados */
+	overflow: hidden; /* Para efectos */
+}
+
+/* Efecto decorativo sutil en la esquina */
+#container form::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 4px; /* Línea delgada */
+	background: linear-gradient(90deg, #7f8fea, #6bd767);
+	z-index: 1;
+}
+
+/* Imagen dentro del formulario, normalmente logo o ilustración */
+#container form img {
+	margin: 0 auto 20px auto; /* Centrado con margen inferior reducido */
+	text-align: center; /* Centra la imagen */
+	display: block; /* Hace que la imagen sea un bloque para respetar margin auto */
+	height: 100px; /* Tamaño compacto */
+	width: 100px; /* Tamaño compacto */
+	border-radius: 50%; /* Forma circular elegante */
+	object-fit: cover; /* Ajusta la imagen */
+	border: 2px solid rgba(127, 143, 234, 0.2); /* Borde sutil mejorado */
+	box-shadow: 0 6px 20px rgba(127, 143, 234, 0.2); /* Sombra mejorada */
+	transition: transform 0.3s ease; /* Animación suave */
+}
+
+/* Animación sutil al pasar sobre la imagen */
+#container form img:hover {
+	transform: scale(1.03); /* Animación sutil */
+}
+
+/* Estilo para todos los elementos <h3> (títulos) dentro del formulario */
+h3 {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fuente profesional */
+	font-size: 22px; /* Tamaño compacto */
+	font-weight: 600; /* Peso semi-bold */
+	letter-spacing: 0.3px; /* Espaciado sutil */
+	width: 100%; /* Ocupa todo el ancho disponible */
+	background: transparent; /* Sin fondo */
+	padding: 0; /* Sin padding */
+	color: #2c3e50; /* Color gris azulado más profesional */
+	text-align: center; /* Centra el texto horizontalmente */
+	text-transform: none; /* Mantiene capitalización normal */
+	border-radius: 0; /* Sin bordes redondeados */
+	margin-block: 0 25px; /* Margen inferior reducido */
+	border-bottom: 1px solid #eaeaea; /* Línea sutil */
+	padding-bottom: 12px; /* Espacio reducido */
+}
+
+/* Subtítulo debajo del título principal */
+.form-subtitle {
+	text-align: center;
+	color: #666;
+	font-size: 13px; /* Tamaño pequeño */
+	margin-bottom: 25px; /* Margen ajustado */
+	letter-spacing: 0.5px; /* Sutil */
+	text-transform: uppercase;
+	font-weight: 500;
+}
+
+/* Contenedor para inputs */
+.input-group {
+	position: relative;
+	margin-bottom: 18px; /* Espacio entre campos reducido */
+}
+
+/* Estilo para todos los inputs dentro del formulario */
+#container form input {
+	width: 100%; /* Ancho completo */
+	padding: 14px 18px; /* Padding compacto */
+	font-size: 15px; /* Tamaño compacto */
+	display: block; /* Se comporta como bloque */
+	margin: 0; /* Sin margen */
+	border-radius: 8px; /* Bordes menos redondeados */
+	border: 1px solid #e0e0e0; /* Borde gris muy suave */
+	background: #fff; /* Fondo blanco sólido */
+	color: #333; /* Texto oscuro */
+	transition: all 0.25s ease; /* Transición rápida */
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fuente consistente */
+}
+
+/* Placeholder estilizado */
+#container form input::placeholder {
+	color: #aaa; /* Color gris claro */
+	font-weight: 300; /* Peso ligero */
+	font-size: 14px; /* Placeholder pequeño */
+}
+
+/* Efecto al enfocar inputs */
+#container form input:focus {
+	outline: none; /* Elimina outline por defecto */
+	border-color: #7f8fea; /* Borde azul al enfocar */
+	box-shadow: 0 0 0 3px rgba(127, 143, 234, 0.15); /* Sombra mejorada */
+}
+
+/* Estilo específico para el botón submit dentro del formulario */
+#container form input[type="submit"] {
+	background: linear-gradient(135deg, #7f8fea 0%, #6bd767 100%); /* Gradiente profesional */
+	padding: 14px; /* Compacto */
+	color: #fff; /* Texto blanco */
+	letter-spacing: 0.5px; /* Sutil */
+	border: none; /* Sin borde */
+	cursor: pointer; /* Cambia cursor a mano */
+	border-radius: 8px; /* Menos redondeado */
+	font-size: 15px; /* Compacto */
+	font-weight: 600; /* Negrita moderada */
+	text-transform: uppercase; /* Texto en mayúsculas */
+	margin-top: 10px; /* Espacio superior */
+	transition: all 0.25s ease; /* Transición rápida */
+	box-shadow: 0 5px 15px rgba(127, 143, 234, 0.3); /* Sombra mejorada */
+	position: relative; /* Para efectos */
+}
+
+/* Efecto hover para el botón */
+#container form input[type="submit"]:hover {
+	transform: translateY(-2px); /* Elevación mejorada */
+	box-shadow: 0 8px 20px rgba(127, 143, 234, 0.4); /* Sombra más pronunciada */
+}
+
+/* Efecto active para el botón */
+#container form input[type="submit"]:active {
+	transform: translateY(0); /* Vuelve a posición normal */
+	box-shadow: 0 3px 10px rgba(127, 143, 234, 0.25); /* Sombra más suave */
+}
+
+/* Enlace de ayuda o información adicional */
+.form-help {
+	text-align: center;
+	margin-top: 20px; /* Espacio reducido */
+	padding-top: 18px; /* Espacio reducido */
+	border-top: 1px solid #f0f0f0; /* Línea sutil */
+}
+
+.form-help a {
+	color: #7f8fea;
+	text-decoration: none;
+	font-size: 13px; /* Tamaño pequeño */
+	transition: color 0.25s ease;
+}
+
+.form-help a:hover {
+	color: #6bd767;
+	text-decoration: underline;
+}
+
+/* Para pantallas pequeñas (móviles) */
+@media screen and (max-width: 768px) {
+	body {
+		background-size: cover; /* Mantiene cubriendo toda la pantalla */
+		background-position: center center; /* Centra la imagen */
+		justify-content: center; /* Centra contenido en móviles */
+		padding-left: 0; /* Sin padding lateral */
+		align-items: flex-start; /* Alinear arriba en móviles */
+		padding-top: 10vh; /* Espacio superior en móviles */
+	}
+	
+	body::before {
+		background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 50%); /* Gradiente vertical para móviles */
+	}
+	
+	#container {
+		justify-content: center; /* Centrar en móviles */
+		margin-top: 0; /* Sin margen superior en móviles */
+		width: 100%; /* Ancho completo */
+	}
+	
+	#container form {
+		width: 90%; /* Ancho casi completo */
+		max-width: 340px; /* Máximo ancho pequeño */
+		margin: 0 auto; /* Centrado automático */
+		padding: 25px 20px; /* Padding compacto */
+	}
+	
+	h3 {
+		font-size: 20px; /* Más pequeño en móviles */
+		margin-bottom: 20px; /* Menos espacio */
+	}
+	
+	#container form img {
+		height: 90px; /* Más pequeño en móviles */
+		width: 90px; /* Más pequeño en móviles */
+		margin-bottom: 15px; /* Menos espacio */
+	}
+}
+
+/* Para tablets */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+	body {
+		padding-left: 4%; /* Menos espacio lateral en tablets */
+	}
+	
+	#container {
+		margin-top: 6vh; /* Menos margen superior en tablets */
+	}
+}
+
+/* Para pantallas grandes */
+@media screen and (min-width: 1025px) and (max-width: 1440px) {
+	body {
+		padding-left: 8%; /* Más espacio lateral */
+	}
+	
+	#container {
+		margin-top: 10vh; /* Más margen superior */
+	}
+}
+
+/* Para pantallas muy grandes */
+@media screen and (min-width: 1441px) {
+	body {
+		padding-left: 12%; /* Mucho espacio lateral */
+	}
+	
+	#container {
+		margin-top: 12vh; /* Más margen superior */
+	}
+	
+	#container form {
+		width: 380px; /* Un poco más ancho */
+		padding: 35px 30px; /* Más padding */
+	}
+}
+
+/* Para pantallas con poca altura */
+@media screen and (max-height: 700px) {
+	body {
+		align-items: flex-start; /* Alinear arriba */
+		padding-top: 5vh; /* Espacio superior reducido */
+	}
+	
+	#container {
+		margin-top: 5vh; /* Menos margen superior */
+	}
+	
+	#container form {
+		padding: 20px 18px; /* Padding más compacto */
+	}
+	
+	#container form img {
+		height: 80px; /* Imagen más pequeña */
+		width: 80px; /* Imagen más pequeña */
+		margin-bottom: 15px; /* Menos espacio */
+	}
+}
+
+/* Animación sutil de entrada */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px); /* Animación desde abajo */
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+#container form {
+	animation: fadeInUp 0.6s ease-out; /* Animación con retardo */
+	animation-fill-mode: both; /* Mantiene estado final */
+}
